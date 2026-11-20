@@ -237,20 +237,156 @@ input,select{font-family:inherit;font-size:inherit;color:inherit}
 .quick-add input:focus{border-bottom-color:rgba(34,211,238,.4)}
 .qtag{display:flex;align-items:center;gap:4px;height:24px;padding:0 7px;border-radius:7px;font-size:9.5px;font-weight:600;border:1px solid;flex:none}
 
-/* ============ briefing ============ */
-#cardBriefing{--accent:#A78BFA;flex:none;padding:12px 14px 11px}
-.brief{
-  display:flex;align-items:center;gap:10px;width:100%;text-align:left;padding:7px 9px;border-radius:11px;
-  border:1px solid rgba(167,139,250,.16);background:linear-gradient(100deg, rgba(167,139,250,.09), rgba(34,211,238,.04));
-  transition:.18s;
+/* ============ hero : 달력 · 시간 · 날씨 ============ */
+#cardHeroWeather{--accent:#38BDF8;flex:none;padding:12px 16px 11px}
+body:not(.view-all) #cardHeroWeather{display:none}
+body.view-all #cardToday{display:none}
+body:not(.view-all) #cardBriefing{display:none}
+.hero-grid{
+  display:grid;gap:14px;align-items:center;
+  grid-template-columns:minmax(0,.9fr) minmax(0,1.46fr) minmax(0,1.08fr);
+  grid-template-areas:"clock week wx";
 }
-.brief:hover{background:linear-gradient(100deg, rgba(167,139,250,.15), rgba(34,211,238,.07));border-color:rgba(167,139,250,.32)}
-.brief-ico{width:28px;height:28px;border-radius:9px;display:grid;place-items:center;flex:none;background:rgba(167,139,250,.13);border:1px solid rgba(167,139,250,.24);color:#D9CCFF}
-.brief-t{min-width:0;flex:1}
-.brief-t b{display:block;font-size:11.5px;font-weight:600;color:#ECE6FF;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.brief-t span{display:block;font-size:10px;color:var(--t3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px}
-.brief-go{color:#8FA3B8;flex:none;font-size:10px;display:flex;align-items:center;gap:3px}
-.brief-chips{display:flex;gap:5px;margin-top:8px;flex-wrap:wrap}
+.hero-clock{grid-area:clock;min-width:0}
+.hero-time{display:flex;align-items:baseline;gap:7px;line-height:1}
+.hero-time b{
+  font-size:29px;font-weight:600;letter-spacing:-.025em;color:#F2FBFF;line-height:1.02;
+  font-variant-numeric:tabular-nums;text-shadow:0 0 24px rgba(56,189,248,.32)
+}
+.hero-time b i{font-style:normal;font-size:18px;font-weight:500;color:#7DE8FF}
+.hero-time em{font-style:normal;font-size:8px;letter-spacing:.18em;color:#5F758B;transform:translateY(-1px)}
+.hero-date{font-size:12px;font-weight:600;color:#DCE9F5;margin-top:3px;letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hero-date em{font-style:normal;color:#7DE8FF}
+.hero-greet{font-size:9.5px;color:#6F859B;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+.hero-week{grid-area:week;min-width:0}
+.hero-week-hd{display:flex;align-items:center;gap:8px;margin-bottom:5px}
+.hero-week-hd .lbl{font-size:8.5px;letter-spacing:.16em;color:#6F859B;text-transform:uppercase}
+.hero-link{
+  margin-left:auto;display:inline-flex;align-items:center;gap:3px;padding:2px 7px;border-radius:7px;
+  font-size:9.5px;color:#8FA3B8;border:1px solid transparent;transition:.14s;white-space:nowrap
+}
+.hero-link:hover{color:#BFF3FF;border-color:rgba(34,211,238,.3);background:rgba(34,211,238,.08)}
+.hero-week-strip{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:5px}
+.hw{
+  position:relative;display:flex;flex-direction:column;align-items:center;gap:1px;padding:5px 1px 7px;border-radius:10px;
+  border:1px solid rgba(148,163,184,.10);background:rgba(255,255,255,.018);transition:.16s;overflow:hidden
+}
+.hw:hover{background:rgba(255,255,255,.055);border-color:rgba(148,163,184,.26)}
+.hw .wd{font-size:8.5px;letter-spacing:.04em;color:#6F859B}
+.hw .dn{font-size:12px;font-weight:600;letter-spacing:-.02em;color:#CFDCEA}
+.hw.sun .wd,.hw.sun .dn{color:#F79AA7}
+.hw.sat .wd,.hw.sat .dn{color:#8FC3FB}
+.hw.today{
+  border-color:rgba(34,211,238,.55);background:linear-gradient(180deg, rgba(34,211,238,.22), rgba(34,211,238,.05));
+  box-shadow:0 0 22px -12px rgba(34,211,238,.95), inset 0 1px 0 rgba(255,255,255,.09)
+}
+.hw.today .wd{color:#9DF3FF}.hw.today .dn{color:#EAFDFF}
+.hw.sel{border-color:rgba(167,139,250,.5);background:rgba(167,139,250,.10)}
+.hw .dots{display:flex;align-items:center;gap:2px;height:4px;margin-top:2px}
+.hw .dots i{display:block;width:3.5px;height:3.5px;border-radius:50%}
+.hw .pbar{position:absolute;left:0;bottom:0;height:2px;background:linear-gradient(90deg,#22D3EE,#10B981);opacity:.9}
+.hw .pbar.zero{display:none}
+
+.hero-weather{grid-area:wx;min-width:0;display:flex;flex-direction:column;gap:5px;align-items:flex-end}
+.hero-regions{display:flex;gap:3px;max-width:100%;overflow-x:auto;scrollbar-width:none;padding:1px 0}
+.hero-regions::-webkit-scrollbar{display:none}
+.hero-region{
+  flex:none;padding:2px 7px;border-radius:99px;font-size:9px;letter-spacing:-.01em;color:#7E94AA;white-space:nowrap;
+  border:1px solid rgba(148,163,184,.16);transition:.14s
+}
+.hero-region:hover{color:#C7D8E8;border-color:rgba(148,163,184,.34)}
+.hero-region.on{color:#CBF5FF;border-color:rgba(56,189,248,.46);background:rgba(56,189,248,.15);font-weight:600}
+.hero-wx-body{display:flex;align-items:center;gap:8px;min-width:0}
+.hero-wx-ico{width:36px;height:36px;flex:none;display:grid;place-items:center}
+.hero-wx-ico svg{width:34px;height:34px;display:block;filter:drop-shadow(0 0 10px rgba(56,189,248,.28))}
+.hero-wx-main{min-width:0}
+.hero-temp{display:flex;align-items:baseline;gap:5px;line-height:1}
+.hero-temp b{font-size:24px;font-weight:600;letter-spacing:-.03em;color:#F2FBFF;font-variant-numeric:tabular-nums}
+.hero-temp span{font-size:10px;color:#9FB4C8;white-space:nowrap}
+.hero-wx-meta{display:flex;flex-direction:column;gap:1px;margin-top:2px}
+.hero-wx-meta span{font-size:9px;color:#7E94AA;white-space:nowrap}
+.hero-wx-meta span b{color:#B9CEDF;font-weight:600}
+.hero-wx-err{display:inline-flex;align-items:center;gap:3px;font-size:9px;color:#F59E0B;white-space:nowrap}
+.hero-wx-err button{font-size:9px;color:#9DF3FF;text-decoration:underline;white-space:nowrap}
+
+.hero-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:9px;padding-top:8px;border-top:1px solid var(--line-soft)}
+.hero-chip{
+  display:inline-flex;align-items:center;gap:5px;height:24px;padding:0 9px;border-radius:99px;font-size:10px;color:#9FB4C8;
+  border:1px solid rgba(148,163,184,.16);background:rgba(255,255,255,.02);transition:.15s;white-space:nowrap
+}
+.hero-chip:hover{color:#E6F6FF;border-color:rgba(56,189,248,.42);background:rgba(56,189,248,.10)}
+.hero-chip i{width:4px;height:4px;border-radius:50%;flex:none}
+.hero-chip b{color:#EAF7FF;font-weight:600}
+.hero-chip svg{flex:none;opacity:.5}
+
+/* ============ morning briefing (임현우 모닝루틴) ============ */
+#cardBriefing{--accent:#A78BFA;flex:1;min-height:0;padding:12px 14px 11px}
+.brf-hd{display:flex;align-items:center;gap:7px;margin-bottom:8px;flex:none}
+.brf-hd .card-title{flex:none}
+.brf-tag{
+  font-size:8.5px;font-weight:600;letter-spacing:.03em;color:#D6C9FF;padding:1.5px 6px;border-radius:99px;
+  border:1px solid rgba(167,139,250,.32);background:rgba(167,139,250,.12);white-space:nowrap;
+  min-width:0;overflow:hidden;text-overflow:ellipsis;flex:0 1 auto
+}
+.brf-ep{font-size:9.5px;color:#7E94AA;white-space:nowrap;margin-left:auto;flex:none}
+.brf-hd #brfAll{flex:none}
+.brf-scroll{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;margin:0 -3px;padding:0 3px 1px}
+.brf-core{
+  position:relative;border-radius:12px;padding:8px 11px 9px 13px;font-size:11.5px;line-height:1.62;color:#EFE9FF;
+  background:linear-gradient(100deg, rgba(167,139,250,.17), rgba(34,211,238,.06));border:1px solid rgba(167,139,250,.26)
+}
+.brf-core::before{content:'';position:absolute;left:0;top:9px;bottom:9px;width:2px;border-radius:2px;background:linear-gradient(180deg,#A78BFA,#22D3EE)}
+.brf-core .k{display:block;font-size:8px;letter-spacing:.17em;color:#B7A6FF;margin-bottom:2px;font-weight:600}
+.brf-terms-hd{display:flex;align-items:center;gap:7px;margin:10px 0 5px}
+.brf-terms-hd .l{font-size:8.5px;letter-spacing:.14em;color:#7E94AA;text-transform:uppercase;font-weight:600}
+.brf-terms-hd .h{margin-left:auto;font-size:9px;color:#526980;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.brf-terms{display:flex;flex-wrap:wrap;gap:4px}
+.brf-term{
+  padding:2.5px 8px;border-radius:99px;font-size:9.5px;color:#BFD9E8;white-space:nowrap;
+  border:1px solid rgba(56,189,248,.2);background:rgba(56,189,248,.06);transition:.14s
+}
+.brf-term:hover{color:#E6FAFF;border-color:rgba(56,189,248,.44);background:rgba(56,189,248,.13)}
+.brf-term.on{color:#02141a;background:#7DE8FF;border-color:#7DE8FF;font-weight:600}
+.brf-term-d{
+  display:none;margin-top:6px;padding:7px 9px;border-radius:9px;font-size:10.5px;line-height:1.55;color:#A9BFD1;
+  background:rgba(255,255,255,.03);border:1px solid var(--line-soft)
+}
+.brf-term-d.on{display:block}
+.brf-term-d b{color:#CFEFFF;font-weight:600;margin-right:4px}
+.brf-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:9px}
+.brf-block{border-radius:10px;border:1px solid rgba(148,163,184,.12);background:rgba(255,255,255,.022);overflow:hidden;transition:.16s}
+.brf-block:hover{border-color:rgba(148,163,184,.26);background:rgba(255,255,255,.04)}
+.brf-block.open{grid-column:1/-1;border-color:rgba(167,139,250,.42);background:rgba(167,139,250,.075)}
+.brf-bh{display:flex;align-items:center;gap:6px;width:100%;padding:6px 8px;font-size:10.5px;color:#C6D8E8;text-align:left}
+.brf-bh i{width:4px;height:4px;border-radius:50%;flex:none}
+.brf-bh b{font-weight:600;letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.brf-bh .c{margin-left:auto;font-size:8.5px;color:#5F758B;flex:none}
+.brf-bh svg{flex:none;opacity:.5;transition:.2s}
+.brf-block.open .brf-bh svg{transform:rotate(180deg);opacity:.9}
+.brf-bb{display:none;padding:0 9px 8px;font-size:10.5px;line-height:1.6;color:#9FB4C8}
+.brf-block.open .brf-bb{display:block}
+.brf-bb .bi{margin-top:5px}
+.brf-bb .bi b{display:block;font-size:10px;color:#DCE9F5;font-weight:600}
+.brf-bb .bi p{margin:1px 0 0}
+.brf-empty{font-size:10px;color:#5F758B;padding:6px 2px}
+
+/* briefing modal */
+.brf-m-core{border-radius:12px;padding:10px 13px;font-size:12px;line-height:1.7;color:#EFE9FF;
+  background:linear-gradient(100deg, rgba(167,139,250,.16), rgba(34,211,238,.05));border:1px solid rgba(167,139,250,.26)}
+.brf-m-core .k{display:block;font-size:8.5px;letter-spacing:.16em;color:#B7A6FF;margin-bottom:3px;font-weight:600}
+.brf-m-terms{display:flex;flex-direction:column;gap:6px;margin-top:4px}
+.brf-m-term{font-size:11.5px;line-height:1.6;color:#A9BFD1}
+.brf-m-term b{display:inline-block;color:#CFEFFF;font-weight:600;margin-right:5px}
+.brf-m-sect{margin-top:16px}
+.brf-m-sect>h4{display:flex;align-items:center;gap:7px;margin:0 0 6px;font-size:11px;font-weight:600;letter-spacing:.06em;color:#C6D8E8}
+.brf-m-sect>h4 i{width:5px;height:5px;border-radius:2px;background:var(--sc,#A78BFA);box-shadow:0 0 8px var(--sc,#A78BFA)}
+.brf-m-sect>h4 span{margin-left:auto;font-size:9px;color:#5F758B;font-weight:500;letter-spacing:0}
+.brf-m-item{padding:7px 0;border-bottom:1px solid var(--line-soft)}
+.brf-m-item:last-child{border-bottom:0}
+.brf-m-item b{display:block;font-size:11.5px;color:#E3EEF8;font-weight:600}
+.brf-m-item p{margin:2px 0 0;font-size:11px;line-height:1.65;color:#9FB4C8}
+.brf-m-note{margin-top:16px;font-size:10px;line-height:1.6;color:#5F758B}
 .chip{display:inline-flex;align-items:center;gap:4px;padding:2px 7px;border-radius:99px;font-size:9.5px;font-weight:600;border:1px solid;white-space:nowrap}
 .chip.good{color:#A7F3D0;background:rgba(16,185,129,.12);border-color:rgba(16,185,129,.30)}
 .chip.warn{color:#FDE5B8;background:rgba(245,158,11,.12);border-color:rgba(245,158,11,.30)}
@@ -672,13 +808,6 @@ input,select{font-family:inherit;font-size:inherit;color:inherit}
 .pf-total b{font-size:14px;color:#F1F8FE;font-weight:600}
 
 /* briefing modal */
-.brf{display:flex;gap:10px;padding:10px 0;border-bottom:1px solid var(--line-soft)}
-.brf:last-child{border-bottom:0}
-.brf .idx{width:19px;height:19px;border-radius:6px;display:grid;place-items:center;font-size:9.5px;font-weight:700;color:#9DEFFC;background:rgba(34,211,238,.10);border:1px solid rgba(34,211,238,.22);flex:none;margin-top:1px}
-.brf .bc{min-width:0;flex:1}
-.brf .bt{font-size:12px;font-weight:600;color:#EAF4FD;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
-.brf .bd{font-size:11px;color:#8FA3B8;line-height:1.55;margin-top:3px}
-
 /* toast */
 .toast{
   position:fixed;left:50%;bottom:26px;transform:translate(-50%,14px);z-index:120;
@@ -855,6 +984,38 @@ input,select{font-family:inherit;font-size:inherit;color:inherit}
   .mnav button{min-height:44px}
   .day{min-height:44px}
   .views button{min-height:38px}
+  #cardHeroWeather{padding:11px 13px 10px}
+  .hero-grid{grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"clock wx" "week week" "regions regions";gap:10px 10px;align-items:center}
+  .hero-weather{display:contents}
+  .hero-regions{grid-area:regions;justify-content:flex-start;order:3}
+  .hero-wx-body{grid-area:wx;justify-self:end}
+  .hero-time b{font-size:25px}
+  .hero-time b i{font-size:15px}
+  .hero-wx-ico{width:30px;height:30px}
+  .hero-wx-ico svg{width:29px;height:29px}
+  .hero-temp b{font-size:21px}
+  .hero-temp span{font-size:9.5px;max-width:76px;overflow:hidden;text-overflow:ellipsis}
+  .hero-wx-meta span{font-size:8.5px}
+  .hero-week-strip{gap:4px}
+  .hw{padding:4px 1px 6px}
+  .hw .dn{font-size:11.5px}
+  .hero-chips{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px;padding-top:7px}
+  .hero-chip{height:27px;font-size:10px;justify-content:flex-start;padding:0 10px}
+  .hero-chip b{margin-right:2px}
+  .hero-chip svg{margin-left:auto}
+  .hero-wx-body{gap:10px}
+  .brf-grid{grid-template-columns:1fr}
+  .brf-tag{display:none}
+  .hero-wx-meta .note{display:none}
+  .brf-scroll{overflow:visible;margin:0;padding:0}
+  #cardBriefing{flex:none}
+  .brf-core{font-size:12px}
+  .brf-term{font-size:10px;padding:4px 9px}
+  .brf-block{border-radius:11px}
+  .brf-block.open{grid-column:auto}
+  .brf-bh{padding:8px 9px;font-size:11.5px}
+  .brf-bb{font-size:11.5px;padding:0 10px 9px;max-height:290px;overflow-y:auto}
+  .brf-bb .bi b{font-size:11px}
 }
 @media (max-width:1099px){
   body.view-routine .col-c,body.view-routine #cardLedger{display:none}
@@ -882,6 +1043,18 @@ input,select{font-family:inherit;font-size:inherit;color:inherit}
   .kpi .v{font-size:14px}
 }
 @media (min-width:1100px){
+  #cardHeroWeather{grid-column:1/-1}
+  body.view-all .app{grid-template-rows:minmax(0,1fr) 292px;gap:12px;padding:12px 20px 14px}
+  body.view-all .board{grid-template-rows:auto minmax(0,1fr);gap:12px}
+  body.view-all #cardMarket{display:none}
+  body.view-all #cardPortfolio .pf-hint{display:none}
+  body.view-all .donut-wrap{max-width:140px;margin-top:2px}
+  body.view-all #cardLedger .ledger-body{gap:14px}
+  body.view-all .kpi{padding:1px 0 2px}
+  body.view-all .kpi .v{font-size:15.5px}
+  body.view-all .chart{min-height:62px}
+  body.view-all .lg-recent{margin-top:5px;padding-top:4px}
+  body.view-all .gauge{height:66px}
   body.view-routine .col-c{display:none}
   body.view-routine .board{grid-template-columns:3.6fr 4.6fr 4.8fr}
   body.view-routine .col-p{display:flex;height:476px}
@@ -911,6 +1084,20 @@ input,select{font-family:inherit;font-size:inherit;color:inherit}
   body.view-ledger .ledger-body{grid-template-columns:240px minmax(0,1fr) 320px}
   body.view-ledger .kpi .v{font-size:21px}
   body.view-ledger .kpi{padding:7px 0 8px}
+}
+@media (min-width:1100px) and (max-height:840px){
+  body.view-all .app{grid-template-rows:minmax(0,1fr) 256px}
+  body.view-all .ledger-body{gap:12px}
+  body.view-all .kpi .v{font-size:14.5px}
+  body.view-all .kpi .s{font-size:8px}
+  body.view-all .chart{min-height:46px}
+  body.view-all .gauge{height:52px}
+  body.view-all .hero-time b{font-size:24px}
+  body.view-all .hero-time b i{font-size:15px}
+  body.view-all .hw{padding:3px 1px 5px}
+  body.view-all .hero-week-hd{margin-bottom:3px}
+  body.view-all .hero-chips{margin-top:6px;padding-top:6px}
+  body.view-all .hero-chip{height:22px}
 }
 </style>
 </head>
@@ -958,6 +1145,40 @@ input,select{font-family:inherit;font-size:inherit;color:inherit}
 <main class="app">
   <div class="board" id="board">
 
+    <section class="card hero" id="cardHeroWeather" aria-label="오늘 달력 · 시간 · 날씨">
+      <div class="hero-grid">
+        <div class="hero-clock">
+          <div class="hero-time"><b id="heroClock">--:--<i>:--</i></b><em>KST</em></div>
+          <div class="hero-date" id="heroDate">--월 --일</div>
+          <div class="hero-greet" id="heroGreet">오늘의 보드</div>
+        </div>
+        <div class="hero-week">
+          <div class="hero-week-hd">
+            <span class="lbl">이번 주</span>
+            <button class="hero-link" id="heroCalBtn" title="할일·루틴 달력으로 이동">
+              달력 · 루틴
+              <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M9 5l7 7-7 7"/></svg>
+            </button>
+          </div>
+          <div class="hero-week-strip" id="heroWeekStrip"></div>
+        </div>
+        <div class="hero-weather">
+          <div class="hero-regions" id="heroRegions" role="group" aria-label="날씨 지역 선택"></div>
+          <div class="hero-wx-body">
+            <div class="hero-wx-ico" id="heroWxIcon" aria-hidden="true"></div>
+            <div class="hero-wx-main">
+              <div class="hero-temp"><b id="heroTemp">--°</b><span id="heroWxDesc">불러오는 중</span></div>
+              <div class="hero-wx-meta">
+                <span id="heroWxRange"><b>최저</b> --° · <b>최고</b> --°</span>
+                <span id="heroWxExtra">습도 --% · 바람 --m/s</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="hero-chips" id="heroChips"></div>
+    </section>
+
     <div class="col col-a">
       <section class="card" id="cardToday">
         <div class="today-top">
@@ -995,21 +1216,19 @@ input,select{font-family:inherit;font-size:inherit;color:inherit}
       </section>
 
       <section class="card" id="cardBriefing">
-      <div class="card-hd">
-        <div class="card-title"><span class="dot"></span>Morning Briefing</div>
-        <div class="card-hd-r"><span style="font-size:9px;color:#61788E" id="briefDate">11.20</span></div>
-      </div>
-        <button class="brief" id="briefOpen">
-          <span class="brief-ico">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v2M12 19v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/><circle cx="12" cy="12" r="4"/></svg>
-          </span>
-          <span class="brief-t">
-            <b id="briefTitle">모닝루틴 요약</b>
-            <span id="briefSub">요약을 불러오는 중</span>
-          </span>
-          <span class="brief-go">5건 ▸</span>
-        </button>
-        <div class="brief-chips" id="briefChips" style="display:none"></div>
+        <div class="card-hd brf-hd">
+          <div class="card-title"><span class="dot"></span>Morning Briefing</div>
+          <span class="brf-tag" id="brfLabel">🌅 임현우 모닝루틴</span>
+          <span class="brf-ep" id="brfEpisode">2026-11-20 (금)</span>
+          <button class="btn ghost sm" id="brfAll" title="모닝 브리핑 전체 보기">전체 보기 ▸</button>
+        </div>
+        <div class="brf-scroll">
+          <div class="brf-core" id="brfCore"><span class="k">한 문장 핵심</span>브리핑을 불러오는 중입니다.</div>
+          <div class="brf-terms-hd"><span class="l">오늘 먼저 볼 용어</span><span class="h" id="brfTermHint">용어를 누르면 뜻이 보입니다</span></div>
+          <div class="brf-terms" id="brfTerms"></div>
+          <div class="brf-term-d" id="brfTermDetail"></div>
+          <div class="brf-grid" id="brfGrid"></div>
+        </div>
       </section>
     </div>
 
@@ -1379,6 +1598,7 @@ function tick(){
     const greet=h<6?'늦은 밤':h<11?'좋은 아침':h<18?'좋은 오후':'좋은 저녁';
     sub.textContent=`${greet} · ${n.getMonth()+1}월 ${n.getDate()}일 ${weekdayKR[n.getDay()]}요일 · 개인 비서 콘솔`;
   }
+  tickHero();
 }
 setInterval(tick,1000); tick();
 
@@ -1576,40 +1796,308 @@ document.getElementById('todayTasks').addEventListener('click',e=>{
 });
 
 /* =========================================================
-   BRIEFING
+   MORNING BRIEFING — 공개 경제 브리핑 (임현우 모닝루틴)
    ========================================================= */
-function briefingItems(){
-  const st=dayStats(TODAY);
-  if(Array.isArray(S.briefing)&&S.briefing.length) return S.briefing;
-  const due=shiftKey(7); const dd=dday(due);
-  const workoutDone=getDay(TODAY).routines&&getDay(TODAY).routines.workout;
-  return [
-    {t:'오늘 루틴 진행',b:st.rDone>=3?'good':'warn',bl:st.rDone>=3?'Good':'주의',
-     d:`루틴 ${st.rDone}/${st.rTotal} 완료. ${st.rDone>=3?'영어·경제·식단 흐름이 좋습니다.':'남은 루틴을 저녁에 몰아서 채우면 5/5 가능합니다.'} 할 일은 ${st.tDone}/${st.tTotal}.`},
-    {t:'적금 조건 비교 마감 D-'+dd,b:'warn',bl:'주의',
-     d:`${dd}일 뒤 신청 마감. 은행별 우대금리와 조건을 비교해 두고 하루 전까지 서류를 준비하면 마감 직전에 몰리지 않습니다.`},
-    {t:'운동 · 이번 주 기록',b:workoutDone?'good':'warn',bl:workoutDone?'Good':'주의',
-     d:workoutDone?'오늘 운동 기록 완료. 주 3회 목표 중 1회 확보했습니다.':'주 3회 목표 중 아직 0회. 20분이라도 기록하면 주간 목표를 지킬 수 있습니다.'},
-    {t:'영어 · 리스닝 15분',b:'good',bl:'Good',
-     d:'1일차 완료. 3일 연속 유지되면 주간 복습과 묶어 다음 단계로 넘어가기 좋습니다.'},
-    {t:'일정 · 주말 오프라인 강의',b:'info',bl:'참고',
-     d:'4주 과정 기준, 시작 4주 전까지 등록금·교재·준비물을 확인해 두면 마감 직전에 몰리지 않습니다.'}
-  ];
+/* BRIEF_FALLBACK_START */
+const BRIEF_FALLBACK={"version":1,"date":"2026-11-20","weekday":"금","label":"한경 임현우 모닝루틴","show":"한경 코리아마켓 《한국경제신문 30분 만에 읽기 | 20261120》","headline":"AI 통행료는 아직 — 코스피 -5.21%","core":"AI에 들어간 돈(약정 9,009억 달러)은 확인됐는데 그 돈을 회수할 통행료(매출·FCF)는 아직 확인되지 않았고, 사상 최대 IPO 앤트로픽이 그 불안을 키운 채 투자자 현금을 빨아가면서 코스피가 하루에 5.21% 무너졌다.","terms":[{"t":"CAPEX(설비투자)","d":"도로 까는 돈. 미래를 위해 창고·공장·서버를 미리 사는 돈이다. 빵집이 오븐 2대(1억원)를 사면 그해 이익은 1억 줄고 매출은 늘어난다."},{"t":"FCF(잉여현금흐름)","d":"통행료에서 유지보수비까지 빼고 실제로 손에 남는 돈. 매출 100원 − 운영비 90원 − 설비투자 30원 = FCF −20원. 적자다."},{"t":"HBM(고대역폭메모리)","d":"AI 칩 옆에 붙는 초고속 창고. 일반 D램보다 비싸고 이익률이 높다. HBM4는 Gb당 2.05달러에서 3~5.5달러로 오르는 중이다."},{"t":"낸드 · ASP(평균판매단가)","d":"낸드는 SSD·USB에 들어가는 저장 메모리, ASP는 하나 팔 때 평균 얼마 받았나다. ASP가 5% 빠지면 같은 물량을 팔아도 매출은 5% 줄어든다."},{"t":"사이드카","d":"컴퓨터 주문(프로그램 매매)에 걸리는 5분 브레이크. 코스피200 선물이 5% 이상 1분간 빠지면 발동한다. 오늘 코스피 11:54, 코스닥 13:28에 걸렸다."},{"t":"보호예수(락업) 해제","d":"상장 때 '몇 달 안 팔겠다'고 묶어둔 주식이 풀리는 것. 전체 100주 중 36주가 풀리면 그 36주가 시장에 쏟아질 수 있다."},{"t":"기준금리","d":"돈의 가격. 한국은 연 3.00%이고 11/26에 올릴지 결정한다. 대출 1억원에 0.25%p 오르면 이자가 연 25만원 늘어난다."}],"sections":[{"k":"flow","label":"핵심 흐름","items":[{"h":"1. 앤트로픽, 사상 최대 IPO로 나스닥 데뷔","p":"공모가 83달러 → 시초 111.50달러(+34.3%) → 종가 97.17달러(+17.07%). 조달액 1,073억 달러(약 142조원)로 역대 최대다. 3분기 매출 170억 달러(+1,127%), 영업손실 5.67억 달러, FCF는 2030년에야 플러스로 돌아선다. 2045년까지 컴퓨팅·인프라 투자 약정 9,009억 달러(1,250조원) 대비 조달액은 8.4분의 1."},{"h":"2. 돈은 아스팔트가 아니라 통행료 회사로 갔다","p":"개인투자자 거래를 추적한 AI 관련주 17개 중 13개에서 순매도가 나왔다. 간밤 나스닥 -2.25%, S&P500 -2.02%, 다우 -2.19%, 필라델피아 반도체 -2.42%. 엔비디아 -3.30%, AMD -7.72%, 알파벳 -3.46%, 아마존 -3.87%. 유동성이 한 종목으로 빨려 들어가면 다른 종목은 '팔아서 사는' 구조가 된다."},{"h":"3. 중국 우회로 차단 → 낸드 가격 선행 하락","p":"미 상무부가 11/16 인도네시아·말레이시아·싱가포르·태국·브라질행 첨단 AI칩에 수출허가를 의무화했고 11/19 발효됐다. 트렌드포스는 2027년 1분기 낸드 계약가를 -0~5%로 이틀 만에 한 분기 앞당겨 하향했다. 낸드 현물가는 이미 20% 넘게 빠졌다. 다만 D램은 1분기 +5~10%, HBM4는 Gb당 3~5.5달러로 아직 상승 전망이다."},{"h":"4. AMD 공매도 리포트 — 규제가 '한 회사 문제'에서 '업종 문제'로","p":"수출 블랙리스트에 오른 중국 서버업체가 등재 후에도 AMD 신규 칩 구동 소프트웨어를 최소 6차례 적용했다는 리포트가 나오며 공매도 포지션이 공개됐다. 근거는 매출 노출도다. AMD의 중국·홍콩 매출 비중 22.4%, 싱가포르 12.4% vs 엔비디아 중국 9.1%. 규제 리스크에 처음으로 종목별 '매출 노출도'라는 가격표가 붙었다."},{"h":"5. 한국 수출 1조 달러 돌파 — 세계 4위","p":"11/19 오후 누적 1조 달러로 미국·독일·중국에 이어 세계 4번째다. 연간 1조1,700억 달러가 전망된다. 1~10월 반도체 수출은 3,968억 달러로 기존 최대치의 3배. 다만 이것은 지난 1년의 성과이고, 시장은 내년의 가격을 먼저 반영한다."},{"h":"6. 한한령 사실상 해제 — 반도체에서 비반도체로 순환매","p":"한·중 FTA 서비스·투자 후속협상이 8년8개월 만에 실질 타결되며 영화·게임 최혜국대우와 공동제작 확대가 담겼다. 코스닥에서 스튜디오드래곤 +29.96%(상한가), 하나투어 +16.75%, 하이브 +13.69%가 움직였다. 공연은 아직 미해결로, 증권가는 본격 매출을 이르면 내년 4분기로 본다."},{"h":"7. 삼성전자 사장단 인사 — 반도체로 세대교체","p":"예년보다 1주 빠른 인사에서 사장 승진 3명이 모두 반도체였다. 메모리사업부장 겸 DRAM개발실장, System LSI 사업부장, CTO 겸 반도체연구소장이다. 같은 날 LG는 주요 CEO를 전원 유임하고 임원 승진을 132명(전년 98명)으로 늘렸고, LG디스플레이는 파주 10.5세대 OLED 3조원 투자를 7년 만에 철회했다. 인사는 6개월 뒤의 우선순위를 말한다."},{"h":"8. IPO 시장 빙하기 — 유캐스트 청약 미달","p":"일반청약 경쟁률 0.5 대 1, 증거금 9억원. 일반기업 기준 3년10개월 만의 미달이다. 11월 신규상장 9곳 중 8곳이 공모가를 밑돌고 평균 -42%다. 미국은 사상 최대 IPO, 한국은 청약 미달 — 글로벌 유동성이 한국을 건너뛰고 미국 AI로 직행했다는 신호다."}]},{"k":"money","label":"돈의 이동","items":[{"h":"글로벌 유동성 → 앤트로픽 IPO","p":"1,073억 달러가 한 종목으로 들어갔고, 그 돈은 기존 AI주를 팔아서 나왔다."},{"h":"외국인·기관 매도 → 개인 매수","p":"유가증권시장에서 외국인 -1조1,320억, 기관 -9,510억(합 -2조833억)을 개인 +1조5,950억이 받았다. 외국인은 코스피200 선물도 -7,966억을 팔았다."},{"h":"외국인 6거래일 연속 순매도","p":"누적 4조9,734억(11/20 오전 기준). 코스닥은 12거래일 연속, 1조6,838억 순매도다."},{"h":"빠진 돈 → 현금·달러","p":"MMF 설정액이 한 달 새 18조원 늘었다. 원/달러는 1,336.2원(+6.2원), 장중 1,340.3원까지 갔다."},{"h":"주식 → 비반도체 순환매","p":"여행·엔터·화장품·제약으로 돈이 옮겨갔다. 반대로 코스닥 소부장은 이오테크닉스 -13.88%, 리노공업 -13.39%, 원익IPS -12.78%로 밀렸다."},{"h":"안전자산까지 팔렸다","p":"금 3,560달러(-3.4%, 11/9 대비 -13.5%), VIX 28.44(일주일 만에 +52%), BTC 61,866달러(-2.8%)·공포탐욕지수 10. 채권만 소폭 올랐다. 주식·금·코인이 같이 빠지고 채권이 겨우 보합이면, 이는 위험자산 회피가 아니라 '현금이 필요하다'는 신호다."}]},{"k":"market","label":"시장 연결","items":[{"h":"미국주식","p":"S&P500 7,175.83(-2.02%), 나스닥 23,879.20(-2.25%), 다우 -2.19%, 필라델피아 반도체 9,419.72(-2.42%). S&P는 5거래일 연속 하락. 엔비디아 145.98(-3.30%)는 52주 최저 바로 위에서 10/6 고점 대비 -39.0%. 핵심 모순은 엔비디아 3분기 매출 1,158억 달러(+103%), 14분기 연속 사상 최대인데 주가는 -39%라는 점이다. 이유는 실적이 아니라 할인율이다. 미 10년물 5.05%면 2030년에야 FCF가 플러스가 되는 사업은 값을 못 받는다."},{"h":"미국채","p":"미 10년물 5.052%(-1.4bp). 3~7년물 국채 ETF +0.15%, 20년물 이상 장기 국채 ETF +0.16%. 주식이 -2% 빠지는데 금리가 1bp 남짓 내려온 것 = 채권이 안전자산 역할을 했지만 약하게 했다. 12월 FOMC에서 0.50%p 인상(빅스텝) 전망도 제기된다."},{"h":"BTC","p":"61,866달러(-2.8%), 원화 8,357만원(11/18 8,826만원 대비 -5.3%). 공포탐욕지수 10(극단적 공포), 김치 프리미엄 +1.99%. 유동성이 줄어드는 국면에서 BTC는 헤지가 아니라 레버리지처럼 움직인다."},{"h":"달러/원화","p":"1,336.2원(+6.2원), 장중 1,340.3원. 달러인덱스 103.7(19개월 최고권). 100일 평균 1,389원보다 3.8% 낮아 원화는 경상수지 흑자(1~8월 2,792억 달러)로 버티는 중이다. 1,340원이 뚫리면 외국인 환차손이 커져 매도가 가속될 수 있다."},{"h":"한국증시","p":"코스피 4,869.96(-5.21%, -267.93p), 코스닥 645.68(-5.71%). 사상 최고 종가(6/18 9,063.84) 대비 -46.3%. 삼성전자 183,100원(-7.01%)은 고점 대비 -49.5%, SK하이닉스 1,113,000원(-5.92%)은 -58.5%. 3중 타격은 ①미국 AI 수급 이탈 ②중국 규제→낸드 가격 ③원화 약세→외국인 환차손이고, 여기에 11/26 한은 금리 인상 가능성이 겹친다."},{"h":"부동산","p":"당일 직접 재료는 확인되지 않았다. 경로는 금리와 주식이다. 한은이 11/26에 3.25%로 올리면 대출금리가 오르고(0.25%p 인상 시 가계 이자부담 +3조3,000억원), 코스피 -46%는 가계 금융자산을 줄여 '주식 팔아 집 산다' 수요를 약하게 만든다. 다만 전세·월세는 매매에서 밀려난 수요가 와서 상대적으로 버틴다."}]},{"k":"counter","label":"반대 시나리오","items":[{"h":"6개월 뒤 반도체가 -30%라면 — 실패 경로","p":"①낸드에 이어 D램 ASP 전망도 하향으로 뒤집힌다 ②HBM4가 Gb당 3달러 하단에서 확정된다 ③AI 서비스 FCF가 계속 밀리고 데이터센터 계약 취소가 반복된다 ④중국이 자립을 앞당겨 공급 과잉·가격 경쟁이 온다 ⑤외국인 순매도가 3개월로 이어지고 원화 1,400원을 뚫는다 ⑥엔비디아의 경영 공백이 대형 고객의 멀티벤더 전환으로 번진다."},{"h":"투자 논리 붕괴 선행 신호","p":"HBM4 계약 단가 Gb당 3달러 미만 확정 · 트렌드포스의 D램 ASP 전망 하향 · 삼성전자·SK하이닉스 CAPEX 가이던스 축소 · 앤트로픽 보호예수 해제 후 -30% · 외국인 순매도 20거래일 이상 + VKOSPI 35pt 이상 · 미 10년물 5.5% 돌파."},{"h":"단순 조정 확인 신호","p":"낸드 ASP가 빠져도 HBM·서버 D램이 상쇄해 분기 영업이익이 전분기 대비 증가 · 외국인 순매수 전환 + 코스피 5,000선 회복 · 앤트로픽 4분기 매출 200억 달러 이상 · 새 CEO 취임 + 가이던스 상회 · MMF 대기자금이 주식형으로 이동."},{"h":"한 줄 판정","p":"지금은 조정 쪽에 무게가 있지만 사이클 전환을 확정할 증거(D램 ASP 하향)는 아직 없다. 그 한 줄이 나오는 날이 진짜 갈림길이다."}]},{"k":"numbers","label":"앞으로 확인할 숫자","items":[{"h":"11/23 · 앤트로픽 2배 ETF 14종 거래 개시","p":"단일종목 레버리지는 변동성을 증폭시킨다. 국내 매수는 기본예탁금 3,000만원이 필요하다."},{"h":"11/26 · 한은 기준금리 (현재 3.00%)","p":"3.25% 인상 여부와 수정 성장률·물가 전망이 같이 나온다. 10월 CPI 2.8%, 3분기 GDP +1.0%(QoQ)·+3.4%(YoY)."},{"h":"12/1 · 젠슨 황 미 하원 청문회","p":"엔비디아 경영 공백에 대한 첫 공식 답변 자리다."},{"h":"12월 · FOMC와 앤트로픽 지수 편입","p":"FOMC는 0.50%p 빅스텝 전망이 제기된 상태. 앤트로픽은 나스닥100·MSCI 편입으로 패시브 ETF의 강제 매수 물량이 생긴다."},{"h":"2027년 1분기 · 낸드 계약가와 D램 ASP","p":"낸드 -0~5%, 범용 D램 +5~10% 전망. D램 전망이 마이너스로 뒤집히면 반대 시나리오가 확정된다."},{"h":"2027년 1분기 · HBM4 Gb당 가격","p":"전망 3~5.5달러(올해 2.05달러). 메모리 3사 이익의 대부분을 결정한다."},{"h":"매일 · VKOSPI와 외국인 순매수 연속일","p":"VKOSPI 35pt가 외국인 복귀 기준선으로 제시된다. 외국인 순매도 연속일이 꺾여야 지수가 바닥을 만든다."},{"h":"매일 · 원/달러 1,340원, 미 10년물 5.05%, 금 3,560달러","p":"환율이 뚫리면 외국인 매도가 빨라지고, 금이 더 빠지면 유동성 회수 신호가 강해진다."}]},{"k":"remember","label":"딱 이것만 기억","items":[{"h":"1. AI 수요는 진짜다. 하지만 지금 주가는 수요가 아니라 조달 비용의 함수다.","p":"엔비디아는 매출 +103%에 주가 -39%다. 미 10년물 5.05%에서 2030년에야 FCF가 플러스가 되는 사업은 값을 못 받는다. 좋은 회사와 좋은 가격은 별개다."},{"h":"2. 오늘 하락의 원인은 실적이 아니라 수급이다.","p":"메모리 3사 내년 영업이익 컨센서스는 890조에서 1,078조로 상향됐는데 주가는 -46%다. 지금 사고파는 기준은 이익이 아니라 '누가 돈을 빼는가'다."},{"h":"3. 다음 하락 트리거는 낸드가 아니라 D램이다.","p":"낸드는 이미 꺾였다(2027년 1분기 -0~5%). 아직 안 꺾인 것은 D램(+5~10%)과 HBM4(2.05→3~5.5달러). 이 둘 중 하나가 하향되면 조정이 아니라 사이클 전환이다."},{"h":"4. 한국은 이제 두 개의 시장이다.","p":"반도체(외국인 매도·낸드 가격·중국 규제) vs 비반도체(한한령·여행·엔터·화장품). 코스피 -5.21%인 날에도 여행·엔터·제약은 올랐다. 지수만 보면 안 보인다."},{"h":"5. 지금 할 일은 '사는 것'이 아니라 '무엇을 확인하고 살지 정하는 것'이다.","p":"체제(CEO·규제·금리)가 가격을 결정하는 구간이다. 그 셋 중 둘이 풀리는 날이 가격이 아니라 근거가 생기는 날이다."}]}],"updated_at":"2026-11-20T16:30:00+09:00"};
+/* BRIEF_FALLBACK_END */
+const BRF_COLORS=['#22D3EE','#10B981','#F59E0B','#F43F5E','#A78BFA','#38BDF8'];
+let BRIEF=null, brfOpenTerm=-1;
+function briefData(){ return BRIEF || BRIEF_FALLBACK || {sections:[]}; }
+function brfItem(it){
+  if(it==null) return {h:'',p:''};
+  if(typeof it==='string') return {h:'',p:it};
+  return {h:it.h||it.t||'', p:it.p||it.d||''};
 }
-function renderBriefing(){
-  const st=dayStats(TODAY);
-  const now=parseKey(TODAY);
-  document.getElementById('briefDate').textContent=`${pad(now.getMonth()+1)}.${pad(now.getDate())}`;
-  document.getElementById('briefTitle').textContent=`${now.getMonth()+1}월 ${now.getDate()}일 모닝루틴 요약`;
-  const items=briefingItems();
-  const bad=items.filter(i=>i.b==='warn').length;
-  document.getElementById('briefSub').textContent=`루틴 ${st.rDone}/${st.rTotal} · 할 일 ${st.tDone}/${st.tTotal} · 확인 ${items.length-bad}건`;
-  const chip2=(Array.isArray(S.briefChips)&&S.briefChips.length)?S.briefChips[0]:`마감 D-${dday(shiftKey(7))}`;
-  document.getElementById('briefChips').innerHTML=
-    `<span class="chip good">루틴 ${st.rDone}/5</span>
-     <span class="chip warn">${escapeHTML(chip2)}</span>
-     <span class="chip info">운동 ${getDay(TODAY).routines&&getDay(TODAY).routines.workout?'1':'0'}회</span>`;
+function brfDateLabel(j){
+  const dt=j&&j.date?parseKey(j.date):parseKey(TODAY);
+  const wd=(j&&j.weekday)||weekdayKR[dt.getDay()];
+  return `${dt.getFullYear()}-${pad(dt.getMonth()+1)}-${pad(dt.getDate())} (${wd})`;
 }
+function brfFullLabel(j){
+  const d=brfDateLabel(j);
+  return j&&j.label? d+' · '+j.label : d;
+}
+async function loadBriefing(){
+  if(location.protocol==='file:'){ renderBrief(); return; }
+  const url='./morning-briefing.json?t='+Date.now();
+  try{
+    const res=await fetch(url,{cache:'no-store'});
+    if(!res.ok) throw new Error('http '+res.status);
+    const j=await res.json();
+    if(j&&(j.core||Array.isArray(j.sections))){ BRIEF=j; renderBrief(); }
+  }catch(e){ /* file:// · 오프라인 → 내장 기본값 유지 */ }
+}
+function renderBrief(){
+  const j=briefData();
+  const lab=document.getElementById('brfLabel');
+  if(lab) lab.textContent='🌅 '+(j.label||'임현우 모닝루틴');
+  const ep=document.getElementById('brfEpisode');
+  if(ep) ep.textContent=brfDateLabel(j);
+  const core=document.getElementById('brfCore');
+  if(core&&j.core) core.innerHTML='<span class="k">한 문장 핵심</span>'+escapeHTML(j.core);
+  const terms=Array.isArray(j.terms)?j.terms:[];
+  const tb=document.getElementById('brfTerms');
+  if(tb){
+    tb.innerHTML=terms.map((t,i)=>{const o=brfItem(t);return `<button class="brf-term" type="button" data-term="${i}" aria-expanded="false">${escapeHTML(o.h)}</button>`;}).join('');
+  }
+  const td=document.getElementById('brfTermDetail');
+  if(td){ td.classList.remove('on'); td.innerHTML=''; }
+  brfOpenTerm=-1;
+  const grid=document.getElementById('brfGrid');
+  if(grid){
+    const secs=Array.isArray(j.sections)?j.sections:[];
+    grid.innerHTML=secs.map((s,i)=>{
+      const c=BRF_COLORS[i%BRF_COLORS.length];
+      const items=(s.items||[]).map(brfItem);
+      const body=items.map(o=>`<div class="bi">${o.h?`<b>${escapeHTML(o.h)}</b>`:''}<p>${escapeHTML(o.p)}</p></div>`).join('');
+      return `<div class="brf-block" data-sec="${i}">
+        <button class="brf-bh" type="button" data-toggle="${i}" aria-expanded="false">
+          <i style="background:${c};box-shadow:0 0 8px ${c}"></i><b>${escapeHTML(s.label||'')}</b>
+          <span class="c">${items.length}</span>
+          <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg>
+        </button>
+        <div class="brf-bb">${body||'<div class="brf-empty">내용 없음</div>'}</div>
+      </div>`;
+    }).join('');
+  }
+}
+function toggleBrfBlock(i, force){
+  const grid=document.getElementById('brfGrid'); if(!grid) return;
+  grid.querySelectorAll('.brf-block').forEach(b=>{
+    const on=(b.dataset.sec===String(i))&&force!==false;
+    if(b.dataset.sec!==String(i)) { b.classList.remove('open'); const h=b.querySelector('.brf-bh'); if(h) h.setAttribute('aria-expanded','false'); }
+    if(b.dataset.sec===String(i)){ b.classList.toggle('open',on); const h=b.querySelector('.brf-bh'); if(h) h.setAttribute('aria-expanded',on?'true':'false'); }
+  });
+}
+function openBriefModal(){
+  const j=briefData();
+  const terms=(j.terms||[]).map(t=>{const o=brfItem(t);return `<div class="brf-m-term"><b>${escapeHTML(o.h)}</b>${escapeHTML(o.p)}</div>`;}).join('');
+  const secs=(j.sections||[]).map((s,i)=>{
+    const c=BRF_COLORS[i%BRF_COLORS.length];
+    const items=(s.items||[]).map(brfItem).map(o=>`<div class="brf-m-item">${o.h?`<b>${escapeHTML(o.h)}</b>`:''}<p>${escapeHTML(o.p)}</p></div>`).join('');
+    return `<div class="brf-m-sect" style="--sc:${c}"><h4><i></i>${escapeHTML(s.label||'')}<span>${(s.items||[]).length}개</span></h4>${items}</div>`;
+  }).join('');
+  const src=j.show||'한경 《한국경제신문 30분 만에 읽기》';
+  openModal(`
+    <div class="m-hd">
+      <div>
+        <div class="t" id="mTitle">🌅 ${escapeHTML(j.label||'임현우 모닝루틴')}</div>
+        <div class="s">${escapeHTML(brfFullLabel(j))}</div>
+      </div>
+      <button class="m-close" data-close="1" aria-label="닫기"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M5 5l14 14M19 5L5 19"/></svg></button>
+    </div>
+    <div class="m-body">
+      <div class="brf-m-core"><span class="k">한 문장 핵심</span>${escapeHTML(j.core||'')}</div>
+      <div class="brf-m-sect" style="--sc:#38BDF8"><h4><i></i>오늘 먼저 볼 용어<span style="margin-left:auto;font-size:9px;color:#5F758B">${(j.terms||[]).length}개</span></h4>
+        <div class="brf-m-terms">${terms}</div>
+      </div>
+      ${secs}
+      <div class="brf-m-note">· ${escapeHTML(src)} 공개 내용을 요약한 것입니다. 개인 보유 종목·계좌 정보는 담지 않았습니다.<br>· 특정 종목의 매수·매도 권유가 아니며, 투자 판단의 근거로 쓰이지 않습니다.</div>
+    </div>
+    <div class="m-foot">
+      <button class="btn" data-close="1">닫기</button>
+      <button class="btn primary" style="margin-left:auto" data-close="1" id="brfToToday">오늘 보드로</button>
+    </div>`);
+}
+document.getElementById('brfTerms').addEventListener('click',e=>{
+  const b=e.target.closest('[data-term]'); if(!b) return;
+  const i=+b.dataset.term;
+  const terms=briefData().terms||[];
+  const box=document.getElementById('brfTermDetail');
+  document.querySelectorAll('#brfTerms .brf-term').forEach(x=>{x.classList.toggle('on',x===b&&brfOpenTerm!==i);x.setAttribute('aria-expanded',String(x===b&&brfOpenTerm!==i));});
+  if(brfOpenTerm===i){ brfOpenTerm=-1; box.classList.remove('on'); box.innerHTML=''; return; }
+  brfOpenTerm=i;
+  const o=brfItem(terms[i]);
+  box.innerHTML=`<b>${escapeHTML(o.h)}</b>${escapeHTML(o.p)}`;
+  box.classList.add('on');
+});
+document.getElementById('brfGrid').addEventListener('click',e=>{
+  const b=e.target.closest('[data-toggle]'); if(!b) return;
+  const i=b.dataset.toggle;
+  const block=b.closest('.brf-block');
+  const willOpen=!block.classList.contains('open');
+  toggleBrfBlock(i,willOpen);
+  if(willOpen) setTimeout(()=>{ try{ block.scrollIntoView({block:'nearest',behavior:'smooth'}); }catch(e){} },60);
+});
+document.getElementById('brfAll').addEventListener('click',openBriefModal);
+
+/* =========================================================
+   HERO — 오늘 달력 · 시간 · 날씨
+   ========================================================= */
+const WX_REGIONS=[
+  {k:'서울',lat:37.5665,lon:126.9780},
+  {k:'인천',lat:37.4563,lon:126.7052},
+  {k:'수원',lat:37.2636,lon:127.0286},
+  {k:'대전',lat:36.3504,lon:127.3845},
+  {k:'대구',lat:35.8714,lon:128.6014},
+  {k:'부산',lat:35.1796,lon:129.0756},
+  {k:'제주',lat:33.4996,lon:126.5312}
+];
+const WX_CACHE_KEY='command_wx_v1', WX_REGION_KEY='command_wx_region';
+let wxRegion=(()=>{ try{ const v=localStorage.getItem(WX_REGION_KEY); return WX_REGIONS.some(r=>r.k===v)?v:'서울'; }catch(e){ return '서울'; } })();
+let wxState=null, wxStale=false, wxLoading=false;
+
+function wxKind(code){
+  const c=Number(code);
+  if(c===0||c===1) return {l:c===0?'맑음':'대체로 맑음',i:'sun'};
+  if(c===2) return {l:'구름 조금',i:'partly'};
+  if(c===3) return {l:'흐림',i:'cloud'};
+  if(c===45||c===48) return {l:'안개',i:'fog'};
+  if(c>=51&&c<=57) return {l:'이슬비',i:'drizzle'};
+  if(c>=61&&c<=67) return {l:'비',i:'rain'};
+  if(c>=71&&c<=77) return {l:'눈',i:'snow'};
+  if(c>=80&&c<=82) return {l:'소나기',i:'rain'};
+  if(c===85||c===86) return {l:'소나기 눈',i:'snow'};
+  if(c>=95) return {l:'천둥·번개',i:'storm'};
+  return {l:'—',i:'cloud'};
+}
+function wxIcon(kind){
+  const g='<defs><linearGradient id="wxg" x1="4" y1="3" x2="28" y2="29"><stop stop-color="#A8F0FF"/><stop offset="1" stop-color="#38BDF8"/></linearGradient></defs>';
+  const S=inner=>`<svg viewBox="0 0 32 32" fill="none" stroke="url(#wxg)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">${g}${inner}</svg>`;
+  const cloud='<path d="M9.8 21.6h12.5a4.3 4.3 0 0 0 .3-8.6 6.2 6.2 0 0 0-11.9 1.3 4 4 0 0 0-.9 7.3Z"/>';
+  switch(kind){
+    case 'sun':return S('<circle cx="16" cy="15.5" r="5.4" fill="url(#wxg)" fill-opacity=".16"/><path d="M16 4.4v2.4M16 24.2v2.4M4.4 15.5h2.4M25.2 15.5h2.4M7.9 7.4l1.8 1.8M22.3 21.8l1.8 1.8M24.1 7.4l-1.8 1.8M9.7 21.8l-1.8 1.8"/>');
+    case 'partly':return S('<circle cx="9.6" cy="9" r="3.3" fill="url(#wxg)" fill-opacity=".14"/><path d="M9.6 2.4v2M9.6 13.6v1.2M3 9h2M14.4 9h1.6M4.6 4l1.4 1.4M13.2 12.6l1.2 1.2"/><g transform="translate(4.2,3)">'+cloud+'</g>');
+    case 'fog':return S(cloud+'<path d="M8.8 25.4h14M11.6 28.3h8.4"/>');
+    case 'drizzle':return S(cloud+'<path d="M12 25l-.7 2.2M16 25l-.7 2.2M20 25l-.7 2.2"/>');
+    case 'rain':return S(cloud+'<path d="M11.4 24.8 10 28.4M16 24.8 14.6 28.4M20.6 24.8 19.2 28.4"/>');
+    case 'snow':return S(cloud+'<path d="M11.4 24.4v3.6M9.8 25.4l3.2 1.6M13 25.4l-3.2 1.6"/><path d="M20.4 24.4v3.6M18.8 25.4l3.2 1.6M22 25.4l-3.2 1.6"/>');
+    case 'storm':return S(cloud+'<path d="M17.2 23.8 14 28.2h3.1l-1 3.4 4.4-4.8h-3l1.5-3"/>');
+    default:return S(cloud);
+  }
+}
+function renderWxRegions(){
+  const box=document.getElementById('heroRegions'); if(!box) return;
+  box.innerHTML=WX_REGIONS.map(r=>`<button type="button" class="hero-region ${r.k===wxRegion?'on':''}" data-region="${r.k}" aria-pressed="${r.k===wxRegion}">${r.k}</button>`).join('');
+}
+function renderWx(){
+  const ico=document.getElementById('heroWxIcon');
+  const tmp=document.getElementById('heroTemp');
+  const desc=document.getElementById('heroWxDesc');
+  const rng=document.getElementById('heroWxRange');
+  const ext=document.getElementById('heroWxExtra');
+  if(!ico||!tmp) return;
+  if(!wxState){
+    ico.innerHTML=wxIcon('cloud');
+    tmp.textContent='--°';
+    if(desc) desc.textContent=wxLoading?'불러오는 중':'날씨 정보 없음';
+    if(rng) rng.innerHTML='<span class="hero-wx-err">불러오기 실패<button type="button" data-wx-retry="1">다시 시도</button></span>';
+    if(ext) ext.innerHTML='<span class="note">인터넷 연결을 확인해 주세요</span>';
+    return;
+  }
+  const cur=wxState.current||{}, day=wxState.daily||{};
+  const info=wxKind(cur.weather_code);
+  ico.innerHTML=wxIcon(info.i);
+  tmp.textContent=Math.round(cur.temperature_2m)+'°';
+  if(desc) desc.textContent=info.l;
+  const lo=Math.round((day.temperature_2m_min||[])[0]);
+  const hi=Math.round((day.temperature_2m_max||[])[0]);
+  const pop=Math.round((day.precipitation_probability_max||[])[0]);
+  if(rng) rng.innerHTML=`<b>최저</b> ${isFinite(lo)?lo+'°':'--'} · <b>최고</b> ${isFinite(hi)?hi+'°':'--'}`+(isFinite(pop)?` · <b>강수</b> ${pop}%`:'');
+  if(ext){
+    const hum=Math.round(cur.relative_humidity_2m), wind=Math.round((cur.wind_speed_10m||0)*10)/10, feels=Math.round(cur.apparent_temperature);
+    ext.innerHTML=`습도 <b>${isFinite(hum)?hum+'%':'--'}</b> · 바람 <b>${isFinite(wind)?wind+'m/s':'--'}</b>`+(isFinite(feels)?` · 체감 <b>${feels}°</b>`:'')+(wxStale?' · 저장된 값':'');
+  }
+}
+async function loadWeather(){
+  const r=WX_REGIONS.find(x=>x.k===wxRegion)||WX_REGIONS[0];
+  const url=`https://api.open-meteo.com/v1/forecast?latitude=${r.lat}&longitude=${r.lon}`+
+    '&current=temperature_2m,weather_code,apparent_temperature,relative_humidity_2m,wind_speed_10m'+
+    '&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max'+
+    '&timezone=Asia%2FSeoul&forecast_days=1&wind_speed_unit=ms';
+  wxLoading=true;
+  try{
+    const res=await fetch(url,{cache:'no-store'});
+    if(!res.ok) throw new Error('http '+res.status);
+    const j=await res.json();
+    if(!j||!j.current) throw new Error('empty');
+    wxState={region:r.k,at:Date.now(),current:j.current,daily:j.daily};
+    wxStale=false;
+    try{ localStorage.setItem(WX_CACHE_KEY,JSON.stringify(wxState)); }catch(e){}
+  }catch(e){
+    let cached=null;
+    try{ cached=JSON.parse(localStorage.getItem(WX_CACHE_KEY)||'null'); }catch(_){}
+    if(cached&&cached.current&&cached.region===r.k){ wxState=cached; wxStale=true; }
+    else { wxState=null; wxStale=false; }
+  }finally{
+    wxLoading=false;
+    renderWx();
+  }
+}
+function tickHero(){
+  const now=new Date();
+  const c=document.getElementById('heroClock');
+  if(c) c.innerHTML=`${pad(now.getHours())}:${pad(now.getMinutes())}<i>:${pad(now.getSeconds())}</i>`;
+  const d=document.getElementById('heroDate');
+  if(d) d.innerHTML=`${now.getMonth()+1}월 ${now.getDate()}일 <em>${weekdayKR[now.getDay()]}요일</em>`;
+  const g=document.getElementById('heroGreet');
+  if(g){
+    const h=now.getHours();
+    g.textContent=h<5?'늦은 밤이에요':h<11?'좋은 아침이에요':h<18?'좋은 오후예요':h<22?'좋은 저녁이에요':'늦은 밤이에요';
+  }
+}
+function renderHeroWeek(){
+  const box=document.getElementById('heroWeekStrip'); if(!box) return;
+  const base=parseKey(TODAY);
+  const start=new Date(base.getFullYear(),base.getMonth(),base.getDate()-base.getDay());
+  let html='';
+  for(let i=0;i<7;i++){
+    const d=new Date(start.getFullYear(),start.getMonth(),start.getDate()+i);
+    const k=keyOf(d), day=getDay(k), st=dayStats(k), wd=d.getDay();
+    const cls=['hw'];
+    if(wd===0) cls.push('sun');
+    if(wd===6) cls.push('sat');
+    if(k===TODAY) cls.push('today');
+    if(k===selectedDay) cls.push('sel');
+    const tags=[...new Set((day.tasks||[]).map(t=>t.tag))].slice(0,3);
+    const dots=tags.map(t=>{const c=(TAGS[t]||TAGS.personal).c;return `<i style="background:${c};box-shadow:0 0 6px ${c}66"></i>`;}).join('');
+    const pct=st.total?Math.round(st.done/st.total*100):0;
+    html+=`<button type="button" class="${cls.join(' ')}" data-hw="${k}" aria-label="${d.getMonth()+1}월 ${d.getDate()}일 ${weekdayKR[wd]}요일${st.total?` · ${st.done}/${st.total} 완료`:''}">
+      <span class="wd">${weekdayKR[wd]}</span>
+      <span class="dn">${d.getDate()}</span>
+      <span class="dots">${dots}</span>
+      <i class="pbar${pct?'':' zero'}" style="width:${pct}%"></i>
+    </button>`;
+  }
+  box.innerHTML=html;
+}
+function renderHeroChips(){
+  const box=document.getElementById('heroChips'); if(!box) return;
+  const st=dayStats(TODAY);
+  const total=pfTotal()||0;
+  const gain=sum(S.holdings,h=>h.amount*(h.ret||0));
+  const ret=total?(gain/total*100):0;
+  const lm=ledgerMonth(), ls=ledgerStats(lm.y,lm.m);
+  const used=Math.round((ls.used||0)*100);
+  const chev='<svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M9 5l7 7-7 7"/></svg>';
+  box.innerHTML=
+    `<button type="button" class="hero-chip" data-go="routine"><i style="background:#22D3EE;box-shadow:0 0 7px #22D3EE"></i>루틴 <b>${st.rDone}/${st.rTotal}</b>${chev}</button>`+
+    `<button type="button" class="hero-chip" data-go="routine"><i style="background:#A78BFA;box-shadow:0 0 7px #A78BFA"></i>할 일 <b>${st.tDone}/${st.tTotal}</b>${chev}</button>`+
+    `<button type="button" class="hero-chip" data-go="portfolio"><i style="background:#10B981;box-shadow:0 0 7px #10B981"></i>포트폴리오 <b style="color:${ret>=0?'#A7F3D0':'#FFC9D2'}">${ret>=0?'+':''}${ret.toFixed(1)}%</b>${chev}</button>`+
+    `<button type="button" class="hero-chip" data-go="ledger"><i style="background:#F43F5E;box-shadow:0 0 7px #F43F5E"></i>가계부 <b>예산 ${used}%</b>${chev}</button>`;
+}
+document.getElementById('heroRegions').addEventListener('click',e=>{
+  const b=e.target.closest('[data-region]'); if(!b) return;
+  wxRegion=b.dataset.region;
+  try{ localStorage.setItem(WX_REGION_KEY,wxRegion); }catch(err){}
+  renderWxRegions(); wxState=null; wxStale=false; renderWx(); loadWeather();
+});
+document.getElementById('cardHeroWeather').addEventListener('click',e=>{
+  if(e.target.closest('[data-wx-retry]')) loadWeather();
+});
+document.getElementById('heroWeekStrip').addEventListener('click',e=>{
+  const b=e.target.closest('[data-hw]'); if(!b) return;
+  openDay(b.dataset.hw);
+});
+document.getElementById('heroCalBtn').addEventListener('click',()=>{
+  setView('routine');
+  setTimeout(()=>{ const c=document.getElementById('cardCalendar'); if(c) c.scrollIntoView({behavior:'smooth',block:'center'}); },80);
+});
+document.getElementById('heroChips').addEventListener('click',e=>{
+  const b=e.target.closest('[data-go]'); if(!b) return;
+  setView(b.dataset.go);
+});
 
 /* =========================================================
    CALENDAR
@@ -1794,7 +2282,7 @@ function openDay(k){
     mount.querySelector('#dayAddInput').addEventListener('keydown',e=>{ if(e.key==='Enter') add(); });
     const firstTag=mount.querySelector('[data-dtag="study"]'); if(firstTag) firstTag.classList.add('on');
   });
-  renderCalendar();
+  renderCalendar(); renderHeroWeek();
 }
 
 /* =========================================================
@@ -2513,36 +3001,6 @@ document.getElementById('lgSide').addEventListener('click',e=>{
 });
 
 /* =========================================================
-   BRIEFING MODAL
-   ========================================================= */
-document.getElementById('briefOpen').addEventListener('click',()=>{
-  const items=briefingItems();
-  const dt=parseKey(TODAY);
-  openModal(`
-    <div class="m-hd">
-      <div><div class="t" id="mTitle">모닝루틴 요약</div>
-      <div class="s">${dt.getMonth()+1}월 ${dt.getDate()}일 ${weekdayKR[dt.getDay()]}요일 · 5건 중 확인 필요 ${items.filter(i=>i.b==='warn').length}건</div></div>
-      <button class="m-close" data-close="1" aria-label="닫기"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M5 5l14 14M19 5L5 19"/></svg></button>
-    </div>
-    <div class="m-body">
-      <div class="m-sect">오늘의 브리핑 5건<i></i></div>
-      ${items.map((it,i)=>`
-        <div class="brf">
-          <span class="idx">${i+1}</span>
-          <div class="bc">
-            <div class="bt">${escapeHTML(it.t)}<span class="chip ${it.b}">${it.bl}</span></div>
-            <div class="bd">${escapeHTML(it.d)}</div>
-          </div>
-        </div>`).join('')}
-      ${(Array.isArray(S.briefing)&&S.briefing.length)?'<div class="pf-hint" style="margin-top:12px;text-align:left">· 불러온 데이터로 만든 요약입니다. 이 내용은 이 브라우저에만 저장됩니다.</div>':'<div class="pf-hint" style="margin-top:12px;text-align:left">· 예시 데이터로 만든 요약입니다. 실제 루틴·일정을 체크하면 이 브리핑도 함께 바뀝니다.</div>'}
-    </div>
-    <div class="m-foot">
-      <button class="btn" data-close="1">닫기</button>
-      <button class="btn primary" style="margin-left:auto" id="briefToToday" data-close="1">오늘 보드로</button>
-    </div>`);
-});
-
-/* =========================================================
    VIEW SWITCH + MENUS
    ========================================================= */
 function setView(v){
@@ -2669,7 +3127,9 @@ dataMenu.addEventListener('click',e=>{
    ========================================================= */
 function renderAll(){
   renderToday();
-  renderBriefing();
+  renderBrief();
+  renderHeroWeek();
+  renderHeroChips();
   renderCalendar();
   renderPortfolio();
   renderMarket();
@@ -2679,6 +3139,8 @@ function renderAll(){
 }
 renderAll();
 setView(S.view||'all');
+renderWxRegions(); renderWx(); loadWeather(); loadBriefing();
+setInterval(loadWeather, 10*60*1000);
 if(!S.demo){ const dct=document.getElementById('demoChipTxt'); if(dct) dct.textContent='내 데이터 · 클릭해 수정'; }
 setTimeout(()=>{ if(!S.demo) return; },0);
 
