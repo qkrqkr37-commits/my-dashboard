@@ -307,8 +307,11 @@ body:not(.view-all) #cardBriefing{display:none}
 .hero-wx-meta{display:flex;flex-direction:column;gap:1px;margin-top:2px}
 .hero-wx-meta span{font-size:9px;color:#7E94AA;white-space:nowrap}
 .hero-wx-meta span b{color:#B9CEDF;font-weight:600}
-.hero-wx-err{display:inline-flex;align-items:center;gap:3px;font-size:9px;color:#F59E0B;white-space:nowrap}
-.hero-wx-err button{font-size:9px;color:#9DF3FF;text-decoration:underline;white-space:nowrap}
+.hero-wx-retry{
+  display:inline-flex;align-items:center;gap:3px;height:20px;padding:0 8px;border-radius:99px;
+  font-size:9.5px;color:#BFEAFB;border:1px solid rgba(56,189,248,.34);background:rgba(56,189,248,.10);white-space:nowrap;transition:.14s
+}
+.hero-wx-retry:hover{color:#EAFDFF;border-color:rgba(56,189,248,.6);background:rgba(56,189,248,.2)}
 
 .hero-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:9px;padding-top:8px;border-top:1px solid var(--line-soft)}
 .hero-chip{
@@ -1980,15 +1983,16 @@ function renderWx(){
   if(!ico||!tmp) return;
   if(!wxState){
     ico.innerHTML=wxIcon('cloud');
-    tmp.textContent='--°';
+    tmp.style.display='none';
     if(desc) desc.textContent=wxLoading?'불러오는 중':'날씨 정보 없음';
-    if(rng) rng.innerHTML='<span class="hero-wx-err">불러오기 실패<button type="button" data-wx-retry="1">다시 시도</button></span>';
+    if(rng) rng.innerHTML='<button type="button" class="hero-wx-retry" data-wx-retry="1">다시 시도 ↻</button>';
     if(ext) ext.innerHTML='<span class="note">인터넷 연결을 확인해 주세요</span>';
     return;
   }
   const cur=wxState.current||{}, day=wxState.daily||{};
   const info=wxKind(cur.weather_code);
   ico.innerHTML=wxIcon(info.i);
+  tmp.style.display='';
   tmp.textContent=Math.round(cur.temperature_2m)+'°';
   if(desc) desc.textContent=info.l;
   const lo=Math.round((day.temperature_2m_min||[])[0]);
