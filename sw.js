@@ -51,7 +51,13 @@ self.addEventListener('fetch', (event) => {
       const fresh = await fetch(new Request(req, isDocument ? { cache: 'no-store' } : { cache: 'no-cache' }));
       if (fresh && fresh.ok) {
         const cache = await caches.open(CACHE);
-        cache.put(isDocument ? './index.html' : req, fresh.clone()).catch(() => {});
+        if (isDocument) {
+          // keep the offline copy identical to what was just served
+          cache.put('./index.html', fresh.clone()).catch(() => {});
+          cache.put('./', fresh.clone()).catch(() => {});
+        } else {
+          cache.put(req, fresh.clone()).catch(() => {});
+        }
         return fresh;
       }
       if (fresh && fresh.status === 404) return fresh;
