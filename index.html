@@ -920,6 +920,40 @@ body:not(.view-all) #cardBriefing{display:none}
   box-shadow:0 20px 40px -18px #000;opacity:0;pointer-events:none;transition:.24s;white-space:nowrap;
 }
 .toast.on{opacity:1;transform:translate(-50%,0)}
+.toast.wide{white-space:normal;max-width:min(420px,calc(100vw - 28px));line-height:1.5;text-align:center}
+
+/* ============ data safety (복구 · 저장 실패) ============ */
+.safety-bar{
+  position:fixed;left:50%;z-index:115;bottom:calc(22px + env(safe-area-inset-bottom));
+  width:min(560px,calc(100vw - 24px));
+  display:none;gap:11px;padding:13px 14px;border-radius:14px;
+  background:linear-gradient(180deg, rgba(20,29,45,.97), rgba(12,18,30,.99));
+  border:1px solid rgba(148,163,184,.20);
+  box-shadow:0 26px 54px -22px #000, inset 0 1px 0 rgba(255,255,255,.06);
+  backdrop-filter:blur(14px);opacity:0;transform:translateX(-50%) translateY(14px);transition:.24s;
+}
+.safety-bar.on{display:flex;opacity:1;transform:translateX(-50%) translateY(0)}
+.safety-bar.warn{border-color:rgba(245,158,11,.42);box-shadow:0 26px 54px -22px #000, 0 0 0 1px rgba(245,158,11,.10), inset 0 1px 0 rgba(255,255,255,.06)}
+.safety-bar.bad{border-color:rgba(244,63,94,.42);box-shadow:0 26px 54px -22px #000, 0 0 0 1px rgba(244,63,94,.10), inset 0 1px 0 rgba(255,255,255,.06)}
+.sb-ico{width:28px;height:28px;border-radius:9px;display:grid;place-items:center;flex:none;margin-top:1px}
+.safety-bar.warn .sb-ico{color:#FBBF24;background:rgba(245,158,11,.14);border:1px solid rgba(245,158,11,.30)}
+.safety-bar.bad .sb-ico{color:#FB7185;background:rgba(244,63,94,.14);border:1px solid rgba(244,63,94,.30)}
+.sb-body{min-width:0;flex:1}
+.sb-title{font-size:12px;font-weight:600;color:#F3F9FF}
+.safety-bar.warn .sb-title{color:#FFE7B8}
+.safety-bar.bad .sb-title{color:#FFD7DE}
+.sb-text{font-size:11px;color:#A9BACD;margin-top:3px;line-height:1.5}
+.sb-text b{color:#EAF3FB}
+.sb-acts{display:flex;flex-wrap:wrap;gap:7px;margin-top:9px}
+.sb-acts .btn{height:29px;padding:0 11px;font-size:11px;border-radius:9px}
+body.sbar-on .toast{bottom:calc(var(--sbar-h, 96px) + 46px)}
+@media (max-width:1099px){
+  .safety-bar{bottom:calc(72px + env(safe-area-inset-bottom))}
+  body.sbar-on .toast{bottom:calc(var(--sbar-h, 120px) + 96px)}
+}
+.menu-pop button:disabled{opacity:.38;cursor:not-allowed}
+.menu-pop button:disabled:hover{background:none;color:#CFDCEA}
+#lastBackupNote{padding:7px 10px 3px;font-size:10.5px;color:var(--t3)}
 
 /* mobile nav */
 .mnav{display:none}
@@ -1518,6 +1552,11 @@ body:not(.view-all) #cardBriefing{display:none}
    MY · COMMAND BOARD v2 — offline single-file dashboard
    ========================================================= */
 const KEY='command_board_v2';
+/* ---------- 데이터 안전 키: 원본 보관 · 직전 백업 · 백업 시각 ---------- */
+const KEY_RAW=KEY+'_recovery_raw', KEY_RAW_AT=KEY+'_recovery_at',
+      KEY_PRE=KEY+'_pre_import_backup', KEY_META=KEY+'_meta';
+let LOAD_RECOVERY=false;   /* 저장된 원본을 읽지 못한 상태 → KEY 덮어쓰기 금지 */
+let SAVE_FAILED=false;     /* 마지막 저장 실패 → 저장 실패 경고 유지 */
 const pad=n=>String(n).padStart(2,'0');
 const keyOf=d=>`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
 const parseKey=k=>{const [y,m,d]=k.split('-').map(Number);return new Date(y,m-1,d);};
@@ -1658,11 +1697,21 @@ const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const sum=(a,f)=>a.reduce((s,x)=>s+(f?f(x):x),0);
 
 function el(html){const t=document.createElement('template');t.innerHTML=html.trim();return t.content.firstElementChild;}
-function toast(msg){
+function toast(msg,ms){
   const t=document.getElementById('toast');
-  t.textContent=msg;t.classList.add('on');
-  clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('on'),1900);
+  t.textContent=msg;
+  t.classList.toggle('wide',String(msg).length>24);
+  t.classList.add('on');
+  clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('on'),ms||1900);
 }
+/* 경고 토스트가 연속 입력 때 도배되지 않도록 1.5초에 한 번만 */
+let _warnAt=0;
+function warnToast(msg){
+  if(Date.now()-_warnAt<1500) return;
+  _warnAt=Date.now(); toast(msg,2600);
+}
+/* 동작 확인 토스트("추가했습니다") 뒤에 경고가 남도록 살짝 늦춰 띄운다 */
+function warnToastLater(msg){ setTimeout(()=>warnToast(msg),90); }
 
 /* ---------- demo data ---------- */
 function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
@@ -1758,12 +1807,25 @@ function seedState(){
   };
 }
 
+/* 저장된 원본을 읽지 못해도 조용히 예시 데이터로 갈아치우지 않는다.
+   원본 문자열을 별도 키에 남기고 LOAD_RECOVERY 로 저장을 막은 뒤 복구 안내를 띄운다. */
+function readLS(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
+function writeLS(k,v){ try{ localStorage.setItem(k,v); return true; }catch(e){ return false; } }
+function stashRecoveryRaw(raw){
+  writeLS(KEY_RAW,raw);
+  writeLS(KEY_RAW_AT,new Date().toISOString());
+}
 let S=(()=>{
   try{
-    const raw=localStorage.getItem(KEY);
+    const raw=readLS(KEY);
     if(!raw) return seedState();
-    const p=JSON.parse(raw);
-    if(!p||p.version!==2) return seedState();
+    let p=null;
+    try{ p=JSON.parse(raw); }catch(e){ p=null; }
+    if(!p||typeof p!=='object'||p.version!==2){
+      stashRecoveryRaw(raw);
+      LOAD_RECOVERY=true;
+      return seedState();
+    }
     p.days=p.days||{}; p.ledger=Array.isArray(p.ledger)?p.ledger:[]; p.holdings=Array.isArray(p.holdings)?p.holdings:[];
     p.budget=p.budget||2300000; p.view=p.view||'all'; p.history=p.history||DEFAULT_HISTORY;
     p.lists=(p.lists&&typeof p.lists==='object')?p.lists:seedState().lists;
@@ -1776,7 +1838,160 @@ let S=(()=>{
 S.presets=normalizePresets(S.presets);
 S.lists=normalizeLists(S.lists);
 
-function save(){ try{ localStorage.setItem(KEY,JSON.stringify(S)); }catch(e){} }
+function save(){
+  if(LOAD_RECOVERY){
+    warnToastLater('복구 안내를 마치기 전에는 새 기록이 저장되지 않습니다 — 원본 데이터를 보호하는 중입니다');
+    return;
+  }
+  try{
+    localStorage.setItem(KEY,JSON.stringify(S));
+    if(SAVE_FAILED){ SAVE_FAILED=false; hideSaveWarn(); }
+  }catch(e){
+    SAVE_FAILED=true; showSaveWarn();
+  }
+}
+
+/* =========================================================
+   데이터 안전: 복구 안내 바 · 저장 실패 경고 · 직전 백업
+   ========================================================= */
+const WARN_ICO='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 3.6 21 20H3L12 3.6Z"/><path d="M12 10v4.4M12 17.2v.2"/></svg>';
+
+const recoveryBar=el(`<div class="safety-bar warn" id="recoveryBar" role="alert">
+  <div class="sb-ico">${WARN_ICO}</div>
+  <div class="sb-body">
+    <div class="sb-title">저장된 데이터를 읽지 못했습니다</div>
+    <div class="sb-text">원본은 브라우저에 그대로 보관되어 있습니다. 지금 화면은 예시 데이터이고, 복구를 마칠 때까지 <b>새 기록은 저장되지 않습니다.</b></div>
+    <div class="sb-acts">
+      <button class="btn primary sm" data-sb="download">원본 데이터 내려받기</button>
+      <button class="btn sm" data-sb="restart">원본 따로 두고 새 보드로 계속하기</button>
+    </div>
+  </div>
+</div>`);
+
+const saveFailBar=el(`<div class="safety-bar bad" id="saveFailBar" role="alert">
+  <div class="sb-ico">${WARN_ICO}</div>
+  <div class="sb-body">
+    <div class="sb-title">변경 내용이 저장되지 않았습니다</div>
+    <div class="sb-text">브라우저 저장 공간 부족 또는 시크릿 모드라 변경 내용이 저장되지 않았습니다. JSON 백업을 내려받으세요.</div>
+    <div class="sb-acts">
+      <button class="btn primary sm" data-sb="export">JSON 백업 내려받기</button>
+    </div>
+  </div>
+</div>`);
+document.body.appendChild(recoveryBar);
+document.body.appendChild(saveFailBar);
+
+function syncSafetyBars(){
+  const rec=recoveryBar.classList.contains('on'), bad=saveFailBar.classList.contains('on');
+  document.body.classList.toggle('sbar-on',rec||bad);
+  const h=Math.max(rec?recoveryBar.offsetHeight:0,bad?saveFailBar.offsetHeight:0);
+  document.body.style.setProperty('--sbar-h',h+'px');
+}
+function showRecoveryBar(){ recoveryBar.classList.add('on'); syncSafetyBars(); }
+function showSaveWarn(){
+  saveFailBar.classList.add('on'); syncSafetyBars();
+  warnToastLater('저장 실패 — JSON 백업을 내려받으세요');
+}
+function hideSaveWarn(){ saveFailBar.classList.remove('on'); syncSafetyBars(); }
+function clearRecovery(){ LOAD_RECOVERY=false; recoveryBar.classList.remove('on'); syncSafetyBars(); }
+function downloadText(name,text,type){
+  const blob=new Blob([text],{type:type});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download=name;
+  a.click(); setTimeout(()=>URL.revokeObjectURL(a.href),0);
+}
+function fmtSavedAt(ts){
+  const d=new Date(ts);
+  if(!ts||isNaN(d.getTime())) return '시각 미상';
+  return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+/* --- 백업 시각(KEY_META) · 직전 백업(KEY_PRE) --- */
+function readMeta(){
+  try{ const m=JSON.parse(readLS(KEY_META)||'null'); return (m&&typeof m.lastBackupAt==='number')?m:null; }catch(e){ return null; }
+}
+function backupAgeText(){
+  const m=readMeta();
+  if(!m) return '기록 없음';
+  const days=Math.floor((Date.now()-m.lastBackupAt)/86400000);
+  return days<=0?'오늘':days+'일 전';
+}
+function markBackup(){
+  writeLS(KEY_META,JSON.stringify({lastBackupAt:Date.now()}));
+  refreshDataMenuState();
+}
+function readPreBackup(){
+  try{ const v=JSON.parse(readLS(KEY_PRE)||'null'); return (v&&v.state&&typeof v.state==='object')?v:null; }catch(e){ return null; }
+}
+function hasRecoveryRaw(){ return !!readLS(KEY_RAW); }
+/* 덮어쓰기 직전 현재 상태를 자동 보관 — 보관에 실패하면 덮어쓰기를 진행하지 않는다 */
+function snapshotBeforeOverwrite(){
+  if(!writeLS(KEY_PRE,JSON.stringify({savedAt:Date.now(),state:S}))){
+    SAVE_FAILED=true; showSaveWarn();
+    toast('직전 백업을 만들지 못해 작업을 중단했습니다 — 저장 공간을 확인해 주세요',3000);
+    return false;
+  }
+  return true;
+}
+function refreshDataMenuState(){
+  const note=document.getElementById('lastBackupNote');
+  if(note) note.textContent='마지막 백업: '+backupAgeText();
+  const rb=document.getElementById('restoreBtn');
+  if(rb) rb.disabled=!readPreBackup();
+  const rc=document.getElementById('recoveryBtn');
+  if(rc) rc.style.display=hasRecoveryRaw()?'flex':'none';
+}
+function doExport(){
+  downloadText(`command_board_${TODAY}.json`,JSON.stringify(S,null,2),'application/json');
+  markBackup();
+  toast('JSON 백업 파일을 내려받았습니다');
+}
+function restoreFromPre(){
+  const pre=readPreBackup();
+  if(!pre){ toast('되돌릴 직전 백업이 없습니다'); return; }
+  const when=fmtSavedAt(pre.savedAt);
+  if(!confirm(`직전 상태(${when})로 되돌립니다.\n지금 화면의 내용은 그대로 남지 않습니다. 계속할까요?`)) return;
+  const st=pre.state;
+  st.version=2;
+  st.days=(st.days&&typeof st.days==='object')?st.days:{};
+  st.ledger=Array.isArray(st.ledger)?st.ledger:[];
+  st.holdings=Array.isArray(st.holdings)?st.holdings:[];
+  st.budget=st.budget||2300000;
+  st.history=st.history||DEFAULT_HISTORY;
+  st.view=st.view||'all';
+  st.calCursor=st.calCursor||{y:NOW.getFullYear(),m:NOW.getMonth()};
+  st.memo=normalizeMemo(st.memo);
+  S=st;
+  S.presets=normalizePresets(S.presets);
+  S.lists=normalizeLists(S.lists);
+  clearRecovery();
+  save(); renderAll();
+  const dct=document.getElementById('demoChipTxt');
+  if(dct) dct.textContent=S.demo?'예시 데이터 포함 · 클릭해 수정':'내 데이터 · 클릭해 수정';
+  toast(`직전 상태(${when})로 되돌렸습니다`,2600);
+}
+
+recoveryBar.addEventListener('click',e=>{
+  const b=e.target.closest('[data-sb]'); if(!b) return;
+  if(b.dataset.sb==='download'){
+    const raw=readLS(KEY_RAW);
+    if(!raw){ toast('보관된 원본이 없습니다'); return; }
+    const at=readLS(KEY_RAW_AT);
+    downloadText(`command_board_recovery_${at?at.slice(0,10):TODAY}.txt`,raw,'text/plain;charset=utf-8');
+    toast('원본 데이터를 .txt로 내려받았습니다');
+  }
+  if(b.dataset.sb==='restart'){
+    if(!confirm('지금 화면(예시 데이터)으로 계속하고, 이후 변경 내용을 저장합니다.\n원본은 브라우저에 그대로 보관되어 데이터 메뉴에서 다시 내려받을 수 있습니다. 계속할까요?')) return;
+    clearRecovery();
+    save(); refreshDataMenuState();
+    toast('새 보드로 계속합니다 — 원본은 데이터 메뉴에서 내려받을 수 있습니다',3000);
+  }
+});
+saveFailBar.addEventListener('click',e=>{
+  const b=e.target.closest('[data-sb]'); if(!b) return;
+  if(b.dataset.sb==='export') doExport();
+});
 
 function getDay(k){ return S.days[k] || {routines:{},tasks:[]}; }
 function ensureDay(k){
@@ -3509,8 +3724,12 @@ const dataMenu=el(`<div class="menu-pop" id="dataMenu">
   <div class="mtitle">데이터</div>
   <button data-d="export">${'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg>'}JSON으로 백업</button>
   <button data-d="import">${'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 15V3M7 8l5-5 5 5M5 21h14"/></svg>'}백업 불러오기</button>
+  <button data-d="restore" id="restoreBtn" disabled>${'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 3v6h6M3.5 9a9 9 0 1 1-1.5 7"/></svg>'}직전 상태로 되돌리기</button>
   <div class="msep"></div>
   <button data-d="reset">${'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg>'}예시 데이터로 초기화</button>
+  <div class="msep"></div>
+  <div class="mnote" id="lastBackupNote">마지막 백업: 기록 없음</div>
+  <button data-d="recovery" id="recoveryBtn" style="display:none">${'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg>'}보관된 복구 원본 내려받기</button>
   <div class="mnote">모든 기록은 이 브라우저(localStorage)에만 저장됩니다. 서버로 전송되지 않습니다.</div>
 </div>`);
 document.body.appendChild(dataMenu);
@@ -3522,7 +3741,7 @@ const demoPop=el(`<div class="menu-pop" id="demoPop">
 document.body.appendChild(demoPop);
 
 document.getElementById('quickBtn').addEventListener('click',e=>openPopover('quickMenu',e.currentTarget));
-document.getElementById('menuBtn').addEventListener('click',e=>openPopover('dataMenu',e.currentTarget));
+document.getElementById('menuBtn').addEventListener('click',e=>{ refreshDataMenuState(); openPopover('dataMenu',e.currentTarget); });
 document.getElementById('demoChip').addEventListener('click',e=>openPopover('demoPop',e.currentTarget));
 
 quickMenu.addEventListener('click',e=>{
@@ -3538,12 +3757,7 @@ dataMenu.addEventListener('click',e=>{
   const b=e.target.closest('[data-d]'); if(!b) return;
   dataMenu.classList.remove('open');
   if(b.dataset.d==='export'){
-    const blob=new Blob([JSON.stringify(S,null,2)],{type:'application/json'});
-    const a=document.createElement('a');
-    a.href=URL.createObjectURL(blob);
-    a.download=`command_board_${TODAY}.json`;
-    a.click(); URL.revokeObjectURL(a.href);
-    toast('JSON 백업 파일을 내려받았습니다');
+    doExport();
   }
   if(b.dataset.d==='import'){
     const inp=document.createElement('input');
@@ -3552,29 +3766,59 @@ dataMenu.addEventListener('click',e=>{
       const f=inp.files[0]; if(!f) return;
       const r=new FileReader();
       r.onload=()=>{
-        try{
-          const p=JSON.parse(r.result);
-          if(!p||!p.days) throw new Error('bad');
-          S={version:2,days:p.days,ledger:p.ledger||[],holdings:p.holdings||[],
-             budget:p.budget||2300000,history:(p.history&&Object.keys(p.history).length)?p.history:DEFAULT_HISTORY,
-             memo:normalizeMemo(p.memo),
-             briefing:Array.isArray(p.briefing)?p.briefing:null,
-             briefChips:Array.isArray(p.briefChips)?p.briefChips:null,
-             demo:false,view:S.view,calCursor:p.calCursor||S.calCursor};
-          S.presets=normalizePresets(p.presets);
-          S.lists=normalizeLists((p.lists&&typeof p.lists==='object')?p.lists:seedState().lists);
-          save(); renderAll();
-          const dct=document.getElementById('demoChipTxt'); if(dct) dct.textContent='내 데이터 · 클릭해 수정';
-          toast('백업을 불러왔습니다');
-        }catch(err){ toast('파일을 읽을 수 없습니다'); }
+        /* 1) 구조 검증: p && p.days && typeof p.days === 'object' */
+        let p=null;
+        try{ p=JSON.parse(r.result); }catch(err){ toast('파일을 읽을 수 없습니다 (JSON 형식 오류)'); return; }
+        if(!p||typeof p!=='object'||!p.days||typeof p.days!=='object'){
+          toast('백업 파일 형식이 올바르지 않습니다 — 불러오지 않았습니다',3000); return;
+        }
+        /* 2) 불러올 건수를 보여 주고 덮어쓰기 확인 */
+        const dayCount=Object.keys(p.days).length;
+        const lCount=Array.isArray(p.ledger)?p.ledger.length:0;
+        const hCount=Array.isArray(p.holdings)?p.holdings.length:0;
+        const msg='백업 파일 내용으로 지금 보드를 덮어씁니다.\n\n'
+          +`· 기록 일수: ${dayCount}일\n`
+          +`· 가계부: ${lCount}건\n`
+          +`· 포트폴리오: ${hCount}종목\n\n`
+          +'지금 데이터는 \'직전 상태 백업\'에 자동 보관되고, 데이터 메뉴의 \'직전 상태로 되돌리기\'로 복구할 수 있습니다.\n\n계속할까요?';
+        if(!confirm(msg)) return;
+        /* 3) 덮어쓰기 직전 현재 상태 자동 백업 (실패하면 진행하지 않음) */
+        if(!snapshotBeforeOverwrite()) return;
+        S={version:2,days:p.days,ledger:p.ledger||[],holdings:p.holdings||[],
+           budget:p.budget||2300000,history:(p.history&&Object.keys(p.history).length)?p.history:DEFAULT_HISTORY,
+           memo:normalizeMemo(p.memo),
+           briefing:Array.isArray(p.briefing)?p.briefing:null,
+           briefChips:Array.isArray(p.briefChips)?p.briefChips:null,
+           demo:false,view:S.view,calCursor:p.calCursor||S.calCursor};
+        S.presets=normalizePresets(p.presets);
+        S.lists=normalizeLists((p.lists&&typeof p.lists==='object')?p.lists:seedState().lists);
+        clearRecovery();
+        save(); renderAll(); refreshDataMenuState();
+        const dct=document.getElementById('demoChipTxt'); if(dct) dct.textContent='내 데이터 · 클릭해 수정';
+        toast(`백업을 불러왔습니다 (${dayCount}일 · 가계부 ${lCount}건)`,2800);
       };
       r.readAsText(f);
     };
     inp.click();
   }
+  if(b.dataset.d==='restore'){
+    restoreFromPre();
+  }
+  if(b.dataset.d==='recovery'){
+    const raw=readLS(KEY_RAW);
+    if(!raw){ toast('보관된 복구 원본이 없습니다'); return; }
+    const at=readLS(KEY_RAW_AT);
+    downloadText(`command_board_recovery_${at?at.slice(0,10):TODAY}.txt`,raw,'text/plain;charset=utf-8');
+    toast('복구 원본을 .txt로 내려받았습니다');
+  }
   if(b.dataset.d==='reset'){
-    if(confirm('모든 기록을 지우고 예시 데이터로 되돌릴까요?')){
-      S=seedState(); save(); renderAll(); toast('예시 데이터로 초기화했습니다');
+    const okMsg='모든 기록을 지우고 예시 데이터로 되돌릴까요?\n\n지금 데이터는 \'직전 상태 백업\'에 자동 보관되고, 데이터 메뉴의 \'직전 상태로 되돌리기\'로 복구할 수 있습니다.';
+    if(confirm(okMsg)){
+      if(!snapshotBeforeOverwrite()) return;
+      clearRecovery();
+      S=seedState(); save(); renderAll(); refreshDataMenuState();
+      const dct=document.getElementById('demoChipTxt'); if(dct) dct.textContent='예시 데이터 포함 · 클릭해 수정';
+      toast('예시 데이터로 초기화했습니다');
     }
   }
 });
@@ -3597,10 +3841,19 @@ function renderAll(){
 }
 renderAll();
 setView(S.view||'all');
+if(LOAD_RECOVERY) showRecoveryBar();
+refreshDataMenuState();
 renderWxRegions(); renderWx(); loadWeather(); loadBriefing();
 setInterval(loadWeather, 10*60*1000);
 if(!S.demo){ const dct=document.getElementById('demoChipTxt'); if(dct) dct.textContent='내 데이터 · 클릭해 수정'; }
 setTimeout(()=>{ if(!S.demo) return; },0);
+/* 실제 데이터인데 마지막 백업이 없거나 7일을 넘겼으면 한 번만 부드럽게 안내 */
+(function backupReminder(){
+  if(LOAD_RECOVERY||S.demo) return;
+  const m=readMeta();
+  if(m&&(Date.now()-m.lastBackupAt)<=7*86400000) return;
+  setTimeout(()=>{ toast('마지막 백업: '+backupAgeText()+' · 데이터 메뉴에서 JSON 백업을 내려받아 두세요',3600); },2600);
+})();
 
 /* second-level clock refresh keeps greeting accurate */
 setInterval(()=>{ tick(); },60000);
