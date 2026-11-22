@@ -3,7 +3,7 @@
  * browser HTTP cache), so an updated index.html shows up on the next open. The cache is only
  * a fallback for when the network is unavailable.
  */
-const CACHE = 'myboard-v1';
+const CACHE = 'myboard-v2';
 const CORE = [
   './',
   './index.html',
